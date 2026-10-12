@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>玄虛命鑑 · 八字生辰批命</title>
+  <style>
+    :root {
+      --bg: #101018;
+      --card-bg: #1c1c28;
+      --gold: #d4af37;
+      --gold-light: #f7e096;
+      --text: #eaeaf0;
+      --text-muted: #8e8ea6;
+      --border: #2d2d42;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      letter-spacing: 4px;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #14141e;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--gold);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row .form-group {
+      flex: 1;
+    }
+
+    button.submit-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #101018;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button.submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 批命結果卡 */
+    .result-section {
+      margin-top: 28px;
+      border-top: 1px dashed var(--border);
+      padding-top: 24px;
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .fate-level {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ff5252;
+      border: 2px solid #ff5252;
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+
+    .overall-text {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #d1d1e0;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    }
+
+    .grid-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .score-card {
+      background: #151520;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .score-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stars {
+      color: var(--gold);
+      font-size: 0.9rem;
+    }
+
+    .tips-box {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .tips-box span strong {
+      color: var(--gold-light);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>玄虛命鑑</h1>
+      <p>推排生辰干支 · 剖析當下氣數</p>
+    </div>
+
+    <form id="fortuneForm" onsubmit="calculateFortune(event)">
+      <div class="form-group">
+        <label for="userName">問卜者芳名 / 暱稱</label>
+        <input type="text" id="userName" placeholder="請輸入姓名" required>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="zodiac">屬相 (生肖)</label>
+          <select id="zodiac" required>
+            <option value="鼠">子鼠</option>
+            <option value="牛">丑牛</option>
+            <option value="虎">寅虎</option>
+            <option value="兔">卯兔</option>
+            <option value="龍">辰龍</option>
+            <option value="蛇">巳蛇</option>
+            <option value="馬">午馬</option>
+            <option value="羊">未羊</option>
+            <option value="猴">申猴</option>
+            <option value="雞">酉雞</option>
+            <option value="狗">戌狗</option>
+            <option value="豬">亥豬</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="birthTime">出生時辰</label>
+          <select id="birthTime" required>
+            <option value="子時">子時 (23:00-01:00)</option>
+            <option value="丑時">丑時 (01:00-03:00)</option>
+            <option value="寅時">寅時 (03:00-05:00)</option>
+            <option value="卯時">卯時 (05:00-07:00)</option>
+            <option value="辰時">辰時 (07:00-09:00)</option>
+            <option value="巳時">巳時 (09:00-11:00)</option>
+            <option value="午時">午時 (11:00-13:00)</option>
+            <option value="未時">未時 (13:00-15:00)</option>
+            <option value="申時">申時 (15:00-17:00)</option>
+            <option value="酉時">酉時 (17:00-19:00)</option>
+            <option value="戌時">戌時 (19:00-21:00)</option>
+            <option value="亥時">亥時 (21:00-23:00)</option>
+            <option value="未知">時辰不詳</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="birthDate">出生國曆年月日</label>
+        <input type="date" id="birthDate" required>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">啟演命盤</button>
+    </form>
+
+    <div class="result-section" id="resultBox">
+      <div class="fate-header">
+        <div>
+          <div style="color: var(--text-muted); font-size: 0.85rem;" id="resUser"></div>
+          <div style="font-size: 1.1rem; color: var(--gold-light);" id="resZodiacInfo"></div>
+        </div>
+        <div class="fate-level" id="resLevel">大吉</div>
+      </div>
+
+      <div class="overall-text" id="resOverall"></div>
+
+      <div class="grid-scores">
+        <div class="score-card">
+          <div class="score-title">事業功名</div>
+          <div class="stars" id="careerStars">★★★★☆</div>
+        </div>
+        <div class="score-card">
+          <div class="score-title">財祿亨通</div>
+          <div class="stars" id="wealthStars">★★★★★</div>
+        </div>
+        <div class="score-card">
+          <div class="score-title">姻緣情感</div>
+          <div class="stars" id="loveStars">★★★☆☆</div>
+        </div>
+        <div class="score-card">
+          <div class="score-title">體魄安康</div>
+          <div class="stars" id="healthStars">★★★★☆</div>
+        </div>
+      </div>
+
+      <div class="tips-box">
+        <span>幸運色：<strong id="resColor">-</strong></span>
+        <span>幸運數：<strong id="resNum">-</strong></span>
+        <span>宜避方向：<strong id="resDirection">-</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 籤文與評語字典
+    const levels = ["大吉", "上吉", "中平", "小吉", "防微"];
+    const colors = ["玄黑", "赤紅", "青綠", "月白", "金黃", "天青"];
+    const directions = ["正南", "東北", "西南", "正西", "正北"];
+    
+    const descriptions = [
+      "吉星拱照，氣勢如虹。近期思維明晰，遇事多有貴人扶持，若有籌劃已久之事，正是果斷推進之時。",
+      "雲開見日，蓄勢待發。周遭瑣碎事務漸入軌道，保持步調穩健，勿生急躁，守正自可得利。",
+      "風平浪靜，修身為上。眼前局勢宜守不宜冒進，多聽取身邊前輩建言，以靜制動方顯沉著。",
+      "暗香浮動，漸入佳境。財帛與心力皆有小成，適合檢視過往細節、整肅心境，自能化阻力為助力。",
+      "略有波瀾，行事需謹。近日常有突發節外生枝，說話注意分寸，重大投資或變革建議三思後行。"
+    ];
+
+    // 字串雜湊函數（確保同生辰+同日期算出的結果一致）
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function renderStars(val) {
+      return "★".repeat(val) + "☆".repeat(5 - val);
+    }
+
+    function calculateFortune(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById("submitBtn");
+      btn.innerText = "推衍周天八卦中...";
+      btn.disabled = true;
+
+      const name = document.getElementById("userName").value.trim();
+      const zodiac = document.getElementById("zodiac").value;
+      const birthTime = document.getElementById("birthTime").value;
+      const birthDate = document.getElementById("birthDate").value;
+      
+      // 加入當日日期做 seed，每天運勢不同
+      const today = new Date().toISOString().slice(0, 10);
+      const seedString = `${name}-${zodiac}-${birthDate}-${birthTime}-${today}`;
+      const hash = simpleHash(seedString);
+
+      setTimeout(() => {
+        btn.innerText = "再次推演";
+        btn.disabled = false;
+
+        // 計算各項指標
+        const levelIdx = hash % levels.length;
+        const descIdx = (hash >> 2) % descriptions.length;
+        
+        const careerVal = (hash % 5) + 1;
+        const wealthVal = ((hash >> 1) % 5) + 1;
+        const loveVal = ((hash >> 2) % 5) + 1;
+        const healthVal = ((hash >> 3) % 5) + 1;
+
+        const luckyColor = colors[hash % colors.length];
+        const luckyNum = (hash % 9) + 1;
+        const avoidDir = directions[hash % directions.length];
+
+        // 渲染至畫面
+        document.getElementById("resUser").innerText = `${name} 居士 · 批照`;
+        document.getElementById("resZodiacInfo").innerText = `歲次【${zodiac}】· ${birthTime}`;
+        document.getElementById("resLevel").innerText = levels[levelIdx];
+        document.getElementById("resOverall").innerText = descriptions[descIdx];
+
+        document.getElementById("careerStars").innerText = renderStars(careerVal);
+        document.getElementById("wealthStars").innerText = renderStars(wealthVal);
+        document.getElementById("loveStars").innerText = renderStars(loveVal);
+        document.getElementById("healthStars").innerText = renderStars(healthVal);
+
+        document.getElementById("resColor").innerText = luckyColor;
+        document.getElementById("resNum").innerText = luckyNum;
+        document.getElementById("resDirection").innerText = avoidDir;
+
+        document.getElementById("resultBox").style.display = "block";
+      }, 700);
+    }
+  </script>
+</body>
+</html>
